@@ -4,27 +4,35 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
+import imageio_ffmpeg
+
 from transcriber.config import settings
+
+
+def get_ffmpeg_path() -> str:
+    """Get path to FFmpeg executable (bundled with imageio-ffmpeg)."""
+    return imageio_ffmpeg.get_ffmpeg_exe()
+
+
+def get_ffprobe_path() -> str:
+    """Get path to FFprobe executable."""
+    # imageio-ffmpeg bundles ffmpeg, ffprobe is in the same directory
+    ffmpeg_path = Path(get_ffmpeg_path())
+    ffprobe_path = ffmpeg_path.parent / ffmpeg_path.name.replace("ffmpeg", "ffprobe")
+    if ffprobe_path.exists():
+        return str(ffprobe_path)
+    # Fallback: try system ffprobe
+    return "ffprobe"
 
 
 class AudioExtractor:
     """Extract audio from video files using FFmpeg."""
 
-    SUPPORTED_FORMATS = {".mp4", ".mkv", ".avi", ".mov", ".webm"}
+    SUPPORTED_FORMATS = {".mp4", ".mkv", ".avi", ".mov", ".webm", ".wav", ".mp3", ".m4a"}
 
     def __init__(self):
-        self._check_ffmpeg()
-
-    def _check_ffmpeg(self):
-        """Check if FFmpeg is available."""
-        try:
-            subprocess.run(
-                ["ffmpeg", "-version"],
-                capture_output=True,
-                check=True,
-            )
-        except (subprocess.CalledProcessError, FileNotFoundError) as e:
-            raise RuntimeError("FFmpeg is not installed or not in PATH") from e
+        self.ffmpeg = get_ffmpeg_path()
+        self.ffprobe = get_ffprobe_path()
 
     def is_supported(self, path: Path) -> bool:
         """Check if file format is supported."""
@@ -60,7 +68,7 @@ class AudioExtractor:
         # -ar 16000: 16kHz sample rate (optimal for Whisper)
         # -ac 1: mono
         cmd = [
-            "ffmpeg",
+            self.ffmpeg,
             "-i", str(video_path),
             "-vn",
             "-acodec", "pcm_s16le",
@@ -84,7 +92,7 @@ class AudioExtractor:
     def get_duration(self, path: Path) -> float:
         """Get duration of audio/video file in seconds."""
         cmd = [
-            "ffprobe",
+            self.ffprobe,
             "-v", "error",
             "-show_entries", "format=duration",
             "-of", "default=noprint_wrappers=1:nokey=1",
@@ -94,6 +102,10 @@ class AudioExtractor:
         result = subprocess.run(cmd, capture_output=True, text=True)
 
         if result.returncode != 0:
-            raise RuntimeError(f"ffprobe failed: {result.stderr}")
+            # Fallback: return 0 if ffprobe fails
+            return 0.0
 
-        return float(result.stdout.strip())
+        try:
+            return float(result.stdout.strip())
+        except ValueError:
+            return 0.0

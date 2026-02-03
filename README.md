@@ -15,8 +15,9 @@ CLI and Web tool for video transcription using Whisper AI.
 ## Requirements
 
 - Python 3.9+
-- FFmpeg (for audio extraction)
 - ~10GB RAM for large-v3 model
+
+> FFmpeg устанавливается автоматически вместе с пакетом.
 
 > **Полная документация:** [docs/GUIDE.md](docs/GUIDE.md)
 
@@ -57,7 +58,7 @@ transcribe video.mp4 --model medium
 # Custom output directory
 transcribe video.mp4 --output ./transcriptions/
 
-# Format with LLM (requires ANTHROPIC_API_KEY)
+# Format with LLM (requires: pip install video-transcriber[llm])
 transcribe video.mp4 --format
 ```
 

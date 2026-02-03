@@ -116,16 +116,32 @@ class LLMFormatter:
         from transcriber.config import settings
         self.api_key = api_key or settings.anthropic_api_key
         self._client = None
+        self._anthropic_available = None
+
+    def _check_anthropic(self) -> bool:
+        """Check if anthropic package is installed."""
+        if self._anthropic_available is None:
+            try:
+                import anthropic  # noqa: F401
+                self._anthropic_available = True
+            except ImportError:
+                self._anthropic_available = False
+        return self._anthropic_available
 
     @property
     def is_available(self) -> bool:
-        """Check if LLM is available."""
-        return bool(self.api_key)
+        """Check if LLM is available (package installed and API key set)."""
+        return self._check_anthropic() and bool(self.api_key)
 
     @property
     def client(self):
         """Lazy-load Anthropic client."""
         if self._client is None:
+            if not self._check_anthropic():
+                raise ImportError(
+                    "anthropic package is not installed. "
+                    "Install it with: pip install video-transcriber[llm]"
+                )
             if not self.api_key:
                 raise ValueError("Anthropic API key is not set")
             import anthropic
