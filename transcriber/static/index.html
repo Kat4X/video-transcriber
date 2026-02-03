@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Transcriber</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Video Transcriber</h1>
+            <p>Transcribe video files using Whisper AI</p>
+        </header>
+
+        <main>
+            <!-- Upload Section -->
+            <section class="upload-section">
+                <div class="upload-area" id="dropZone">
+                    <div class="upload-icon">📁</div>
+                    <p>Drag & drop video file here</p>
+                    <p class="upload-hint">or click to select file</p>
+                    <input type="file" id="fileInput" accept="video/*" hidden>
+                </div>
+
+                <div class="divider">
+                    <span>or</span>
+                </div>
+
+                <div class="url-input-container">
+                    <input type="text" id="youtubeUrl" placeholder="Paste YouTube URL here...">
+                    <button id="transcribeUrlBtn">Transcribe</button>
+                </div>
+
+                <!-- Options -->
+                <div class="options">
+                    <div class="option">
+                        <label for="modelSelect">Model:</label>
+                        <select id="modelSelect">
+                            <option value="large-v3" selected>Large V3 (Best)</option>
+                            <option value="medium">Medium (Faster)</option>
+                            <option value="small">Small (Fast)</option>
+                        </select>
+                    </div>
+                    <div class="option">
+                        <label for="langSelect">Language:</label>
+                        <select id="langSelect">
+                            <option value="auto" selected>Auto-detect</option>
+                            <option value="ru">Russian</option>
+                            <option value="en">English</option>
+                        </select>
+                    </div>
+                    <div class="option checkbox">
+                        <input type="checkbox" id="timestampsCheck">
+                        <label for="timestampsCheck">Include timestamps</label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Progress Section -->
+            <section class="progress-section" id="progressSection" hidden>
+                <h2>Processing...</h2>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text" id="progressText">Initializing...</p>
+            </section>
+
+            <!-- Result Section -->
+            <section class="result-section" id="resultSection" hidden>
+                <h2>Transcription Result</h2>
+                <div class="result-actions">
+                    <button id="copyBtn">Copy Text</button>
+                    <button id="downloadMdBtn">Download .md</button>
+                    <button id="downloadSrtBtn">Download .srt</button>
+                </div>
+                <div class="result-text" id="resultText"></div>
+            </section>
+
+            <!-- History Section -->
+            <section class="history-section">
+                <h2>Recent Transcriptions</h2>
+                <div class="history-list" id="historyList">
+                    <p class="empty-history">No transcriptions yet</p>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Powered by Whisper AI</p>
+        </footer>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
