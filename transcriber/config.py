@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     )
 
     # Whisper settings
-    whisper_model: Literal["tiny", "base", "small", "medium", "large-v3"] = "large-v3"
+    whisper_model: Literal["tiny", "base", "small", "medium", "large-v3"] = "medium"
     whisper_device: Literal["auto", "cpu", "cuda"] = "auto"
     whisper_compute_type: Literal["auto", "int8", "float16", "float32"] = "auto"
 

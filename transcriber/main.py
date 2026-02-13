@@ -2,6 +2,7 @@ from __future__ import annotations
 """FastAPI web application for video transcription."""
 
 import asyncio
+import json
 import shutil
 from pathlib import Path
 from typing import Annotated, Dict, List, Optional
@@ -239,11 +240,11 @@ async def transcription_events(transcription_id: str):
                 if data["progress"] != last_progress or data["status"] in ("completed", "failed"):
                     yield {
                         "event": "progress",
-                        "data": {
+                        "data": json.dumps({
                             "progress": data["progress"],
                             "status": data["status"],
                             "error": data.get("error"),
-                        },
+                        }),
                     }
                     last_progress = data["progress"]
 

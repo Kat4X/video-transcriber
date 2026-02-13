@@ -7,6 +7,7 @@ from pathlib import Path
 import yt_dlp
 
 from transcriber.config import settings
+from transcriber.services.audio import AudioExtractor
 
 
 class YouTubeDownloader:
@@ -100,13 +101,6 @@ class YouTubeDownloader:
             "quiet": True,
             "no_warnings": True,
             "progress_hooks": [progress_hook],
-            "postprocessors": [
-                {
-                    "key": "FFmpegExtractAudio",
-                    "preferredcodec": "wav",
-                    "preferredquality": "192",
-                }
-            ],
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -114,17 +108,22 @@ class YouTubeDownloader:
             title = info.get("title", video_id)
 
         # Find the downloaded file
-        output_path = self.output_dir / f"{video_id}.wav"
-        if not output_path.exists():
-            # Try other extensions
-            for ext in ["m4a", "mp3", "webm", "mp4"]:
-                alt_path = self.output_dir / f"{video_id}.{ext}"
-                if alt_path.exists():
-                    output_path = alt_path
-                    break
+        downloaded_path = None
+        for ext in ["m4a", "webm", "mp3", "mp4", "ogg", "wav"]:
+            candidate = self.output_dir / f"{video_id}.{ext}"
+            if candidate.exists():
+                downloaded_path = candidate
+                break
 
-        if not output_path.exists():
-            raise FileNotFoundError(f"Downloaded file not found: {output_path}")
+        if not downloaded_path:
+            raise FileNotFoundError(f"Downloaded file not found for video: {video_id}")
+
+        # Convert to WAV using bundled ffmpeg (no system ffprobe needed)
+        output_path = self.output_dir / f"{video_id}.wav"
+        if downloaded_path.suffix != ".wav":
+            extractor = AudioExtractor()
+            output_path = extractor.extract_audio(downloaded_path, output_path)
+            downloaded_path.unlink()  # remove original
 
         return output_path, self._sanitize_filename(title)
 

@@ -28,7 +28,7 @@ def get_ffprobe_path() -> str:
 class AudioExtractor:
     """Extract audio from video files using FFmpeg."""
 
-    SUPPORTED_FORMATS = {".mp4", ".mkv", ".avi", ".mov", ".webm", ".wav", ".mp3", ".m4a"}
+    SUPPORTED_FORMATS = {".mp4", ".mkv", ".avi", ".mov", ".webm", ".wav", ".mp3", ".m4a", ".ogg"}
 
     def __init__(self):
         self.ffmpeg = get_ffmpeg_path()
@@ -61,6 +61,10 @@ class AudioExtractor:
         # Default output path in temp directory
         if output_path is None:
             output_path = settings.temp_dir / f"{video_path.stem}.wav"
+
+        # Skip conversion if input is already the target WAV file
+        if video_path.resolve() == output_path.resolve():
+            return output_path
 
         # Extract audio with FFmpeg
         # -vn: no video
@@ -99,10 +103,12 @@ class AudioExtractor:
             str(path),
         ]
 
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True)
+        except FileNotFoundError:
+            return 0.0
 
         if result.returncode != 0:
-            # Fallback: return 0 if ffprobe fails
             return 0.0
 
         try:
